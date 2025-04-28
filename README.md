@@ -110,6 +110,3 @@ The model can be fine-tuned further, depending on the application. You can adjus
 
 ---
 
-## License
-
-This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for more information.
