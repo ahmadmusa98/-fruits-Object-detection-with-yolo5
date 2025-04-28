@@ -1,205 +1,115 @@
-# YOLOv5 Custom Object Detection - Fruit Detection
+# YOLOv5 Custom Object Detection - Fruit Detection(APPLE detection )
 
 ## Overview
 
-This project demonstrates the training of a custom **YOLOv5** model for **object detection**, specifically focused on detecting various **fruits** in images. YOLO (You Only Look Once) is a state-of-the-art real-time object detection algorithm that efficiently detects objects in images and videos. In this project, we leverage YOLOv5 to detect different types of fruits, using a dataset obtained from **Roboflow**. The model is trained from scratch using a custom configuration.
+This project demonstrates the training of a **YOLOv5** model for detecting **fruits** in images. YOLOv5, developed by Ultralytics, is one of the most popular deep learning models for real-time object detection. It can detect objects with high accuracy and speed in images and videos.
 
-## Requirements
+In this project, we focus on training a **custom YOLOv5 model** using a dataset of various fruits. The dataset is sourced from **Roboflow**, a platform that provides easy access to datasets and facilitates the training process. The goal is to configure and train a model that can identify fruits such as apples, bananas, oranges, and more.
 
-Before you start, make sure you have the following installed:
+### Key Components:
+- **YOLOv5 Architecture**: The model configuration, including the depth and width of the network, the number of classes, and anchor box sizes.
+- **Training**: The process of training the YOLOv5 model on a custom fruit dataset.
+- **TensorBoard**: Used for visualizing the training process, including metrics like loss, accuracy, precision, and recall.
 
-### Prerequisites
-- Python 3.8+
-- PyTorch 1.7+ (with CUDA support for GPU acceleration)
-- Git
-- TensorBoard (for monitoring training)
+## Deep Learning-Based Model Description
 
-### Installing Dependencies
+### 1. **YOLOv5 Overview**
+YOLOv5 is an implementation of the "You Only Look Once" (YOLO) algorithm, which is designed for real-time object detection. It predicts the class and bounding box coordinates for each object in an image. The model consists of:
+- **Backbone**: A feature extractor (like convolutional layers).
+- **Head**: The detection mechanism that makes final predictions about the objects in the image.
 
-Clone the YOLOv5 repository and install the required dependencies:
+The model is highly efficient and optimized for performance, providing a balance between speed and accuracy.
 
-```bash
-# Clone the YOLOv5 repository
-git clone https://github.com/ultralytics/yolov5  # Clone the repo
-cd yolov5  # Navigate into the YOLOv5 directory
+### 2. **Dataset Overview**
+The dataset used in this project contains labeled images of fruits. The dataset is split into two main parts:
+- **Training Set**: Used to train the model, which includes annotated images of fruits with labels.
+- **Validation Set**: Used to evaluate the model's performance during training.
 
-# Reset to a specific commit for consistency
-git reset --hard 886f1c03d839575afecb059accf74296fad395b6  
+The dataset was sourced from **Roboflow**, which allows users to easily upload and annotate images, and download the dataset in formats compatible with YOLOv5.
 
-# Install dependencies (ignore any errors)
-pip install -qr requirements.txt  
-pip install -q roboflow  # Install Roboflow library for dataset management
-Step 1: Set Up Roboflow Dataset
-Create a Roboflow account and navigate to your project (e.g., Fruit Detection).
+### 3. **Training Process**
+The YOLOv5 model was trained using the following hyperparameters:
 
-Obtain your API Key from Roboflow.
-
-Download the dataset and configure it for YOLOv5:
-
-python
-Copy
-Edit
-from roboflow import Roboflow
-
-# Initialize Roboflow and load the dataset using your API key
-rf = Roboflow(api_key="YOUR_API_KEY")
-project = rf.workspace().project("fruit-detection-iqgy7")  # Your project ID
-dataset = project.version(1).download("yolov5")  # Download dataset formatted for YOLOv5
-This will download the dataset and save it in the dataset.location folder.
-
-Step 2: Check YAML Configuration
-To check the dataset’s configuration, view the data.yaml file, which contains important information like the number of classes and paths to training/validation images.
-
-bash
-Copy
-Edit
-cat {dataset.location}/data.yaml  # Display the YAML configuration for the dataset
-The data.yaml file contains:
-
-nc: The number of classes in the dataset (e.g., the number of different fruits you want to detect).
-
-train: Path to the training images.
-
-val: Path to the validation images.
-
-names: List of class names (e.g., 'apple', 'banana', etc.).
-
-Step 3: Customize the YOLOv5 Model
-Now we will modify the YOLOv5 model to fit our custom dataset. This involves adjusting the configuration of the model based on the number of classes in your dataset and setting up custom anchors.
-
-First, load the number of classes from the YAML configuration:
-
-python
-Copy
-Edit
-import yaml
-
-with open(dataset.location + "/data.yaml", 'r') as stream:
-    num_classes = str(yaml.safe_load(stream)['nc'])  # Get the number of classes from the YAML file
-Model Configuration (custom_yolov5s.yaml)
-Now, let’s define the custom YOLOv5 model by configuring the following hyperparameters:
-
-Number of Classes (nc): Based on the number of fruit classes.
-
-Depth and Width Multiples: Control the complexity of the model (how deep and wide the network is).
-
-Anchors: Predefined bounding box shapes that help the model learn to detect objects.
-
-Here is a sample model configuration:
-
-yaml
-Copy
-Edit
-# Model parameters
-nc: {num_classes}  # Number of classes (dynamically replaced with the number of classes in the dataset)
-depth_multiple: 0.33  # Depth multiplier (controls the number of layers in the model)
-width_multiple: 0.50  # Width multiplier (controls the number of channels in each layer)
-
-# Anchors
-anchors:
-  - [10,13, 16,30, 33,23]  # P3/8 (small objects)
-  - [30,61, 62,45, 59,119]  # P4/16 (medium objects)
-  - [116,90, 156,198, 373,326]  # P5/32 (large objects)
-
-# Backbone: Extracts features from the image
-backbone:
-  [[-1, 1, Focus, [64, 3]],  # Focus Layer (64 channels, kernel size of 3)
-   [-1, 1, Conv, [128, 3, 2]],  # Conv Layer (128 channels, kernel size 3, stride 2)
-   [-1, 3, BottleneckCSP, [128]],  # BottleneckCSP (128 channels)
-   [-1, 1, Conv, [256, 3, 2]],  # Conv Layer (256 channels, kernel size 3, stride 2)
-   [-1, 9, BottleneckCSP, [256]],  # BottleneckCSP (256 channels)
-   [-1, 1, Conv, [512, 3, 2]],  # Conv Layer (512 channels, kernel size 3, stride 2)
-   [-1, 9, BottleneckCSP, [512]],  # BottleneckCSP (512 channels)
-   [-1, 1, Conv, [1024, 3, 2]],  # Conv Layer (1024 channels, kernel size 3, stride 2)
-   [-1, 1, SPP, [1024, [5, 9, 13]]],  # Spatial Pyramid Pooling (SPP) Layer
-   [-1, 3, BottleneckCSP, [1024, False]],  # BottleneckCSP (1024 channels, without residual connections)
-  ]
-
-# Head: Detection head of the model
-head:
-  [[-1, 1, Conv, [512, 1, 1]],  # Conv Layer (512 channels, kernel size 1x1)
-   [-1, 1, nn.Upsample, [None, 2, 'nearest']],  # Upsample the feature map
-   [[-1, 6], 1, Concat, [1]],  # Concatenate feature map from backbone
-   [-1, 3, BottleneckCSP, [512, False]],  # BottleneckCSP (512 channels)
+- **Image Size (`--img`)**: 
+   - The model uses an input image size of `416x416` pixels. This size is a trade-off between computational efficiency and the ability to detect small objects.
    
-   [-1, 1, Conv, [256, 1, 1]],  # Conv Layer (256 channels, kernel size 1x1)
-   [-1, 1, nn.Upsample, [None, 2, 'nearest']],  # Upsample the feature map
-   [[-1, 4], 1, Concat, [1]],  # Concatenate feature map from backbone
-   [-1, 3, BottleneckCSP, [256, False]],  # BottleneckCSP (256 channels)
+- **Batch Size (`--batch`)**:
+   - The batch size of `16` was used. This refers to the number of images processed per training step. A larger batch size can speed up training but may require more GPU memory.
+
+- **Number of Epochs (`--epochs`)**:
+   - The model was trained for `50` epochs. An epoch refers to one complete pass through the entire dataset during training. The number of epochs determines how many times the model will see the entire dataset.
+
+- **Learning Rate**:
+   - A default learning rate was used, which adjusts how much the model's weights are updated after each training step. The learning rate can affect how quickly the model converges and its final performance.
+
+- **Model Configuration (`--cfg`)**:
+   - A custom YAML configuration file was created for the YOLOv5 model. This file defines the structure of the model, such as the number of classes (for fruit detection) and the architecture of the network (backbone and head).
+
+   - **Number of Classes (`nc`)**: The number of fruit classes (e.g., 3 classes for apple, banana, and orange).
+   - **Depth Multiple (`depth_multiple`)**: A parameter that controls how deep the model is (i.e., how many layers are in the network).
+   - **Width Multiple (`width_multiple`)**: A parameter that adjusts the number of filters or channels in each layer, affecting the complexity of the model.
    
-   [-1, 1, Conv, [256, 3, 2]],  # Conv Layer (256 channels, kernel size 3, stride 2)
-   [[-1, 14], 1, Concat, [1]],  # Concatenate feature map from head
-   [-1, 3, BottleneckCSP, [512, False]],  # BottleneckCSP (512 channels)
-   
-   [-1, 1, Conv, [512, 3, 2]],  # Conv Layer (512 channels, kernel size 3, stride 2)
-   [[-1, 10], 1, Concat, [1]],  # Concatenate feature map from head
-   [-1, 3, BottleneckCSP, [1024, False]],  # BottleneckCSP (1024 channels)
-   
-   [[17, 20, 23], 1, Detect, [nc, anchors]],  # Detect Layer (final detection output for classes)
-  ]
-Focus Layer: A specialized layer that extracts spatially focused features from the input image.
+   - **Anchors**: These are predefined bounding box shapes that help the model learn how to detect objects at various scales. The anchor sizes are manually set to detect small, medium, and large objects:
+     - Small (P3/8)
+     - Medium (P4/16)
+     - Large (P5/32)
 
-Conv Layers: Convolution layers that reduce image resolution while extracting features.
+### 4. **Model Architecture**
+YOLOv5's architecture consists of two main parts:
+1. **Backbone**:
+   - The backbone extracts important features from the input image through a series of convolutional layers, followed by more complex layers like **BottleneckCSP** and **SPP** (Spatial Pyramid Pooling).
+   - The backbone enables the model to learn hierarchical features, allowing it to detect objects at multiple scales.
 
-BottleneckCSP: A residual block designed to improve training efficiency by maintaining gradient flow through deeper layers.
+2. **Head**:
+   - The head combines the features extracted by the backbone and makes the final predictions. The head consists of several layers that concatenate features from different levels of the backbone, followed by convolution layers and upsampling operations.
+   - The final layer outputs predictions for the number of classes (`nc`), bounding box coordinates, and object confidence scores.
 
-SPP: Spatial Pyramid Pooling increases the receptive field and allows the network to detect objects at multiple scales.
+### 5. **Loss Function**
+YOLOv5 uses a combination of three loss components during training:
+- **Objectness Loss**: Measures how confident the model is that an object exists in a given region.
+- **Classification Loss**: Measures the accuracy of class predictions (i.e., what fruit the model thinks is in the image).
+- **Bounding Box Loss**: Measures how accurate the predicted bounding box is compared to the ground truth.
 
-Step 4: Training the YOLOv5 Model
-Once the dataset and model configuration are set, you can start training the YOLOv5 model:
-
-bash
-Copy
-Edit
-cd /content/yolov5/
-python train.py --img 416 --batch 16 --epochs 50 --data {dataset.location}/data.yaml --cfg ./models/custom_yolov5s.yaml --weights '' --name yolov5s_results --cache
-Parameters:
---img 416: Specifies the input image size (416x416 pixels).
-
---batch 16: Batch size (number of images processed per step).
-
---epochs 50: Number of training epochs (iterations through the entire dataset).
-
---data {dataset.location}/data.yaml: Path to the dataset configuration file.
-
---cfg ./models/custom_yolov5s.yaml: Path to the custom model configuration file.
-
---weights '': Start training from scratch (without pre-trained weights).
-
---name yolov5s_results: Directory name to save the results.
-
---cache: Cache images to speed up training.
-
-Step 5: Monitor Training with TensorBoard
-You can monitor the training progress using TensorBoard, which will allow you to visualize various metrics like loss, precision, recall, and more:
-
-bash
-Copy
-Edit
-# Start TensorBoard
-%load_ext tensorboard
-%tensorboard --logdir runs
-This will open a TensorBoard interface to track training performance and optimize model parameters.
-
-Conclusion
-This repository provides a detailed, step-by-step guide for training a custom YOLOv5 model for fruit detection. The flexibility of YOLOv5 allows you to fine-tune the model with custom datasets and configurations to suit your specific needs.
-
-By adjusting parameters like depth_multiple, width_multiple, and nc, you can customize the model's performance for a wide range of applications.
-
-License
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-markdown
-Copy
-Edit
+The total loss is the sum of these components, and the model is trained to minimize this loss.
 
 ---
 
-### Instructions to Add to GitHub:
-1. **Copy the entire content** above.
-2. **Go to your repository** on GitHub.
-3. **Create or Edit the `README.md`** file.
-4. **Paste the content** into the editor.
-5. **Commit the changes** to save the updated README.
+## Parameters Used in the Training
 
-Once done, your **README.md** will be fully populated and displayed on your GitHub repository.
+- **Number of Classes (`nc`)**: 
+   - This value is derived from the number of different fruit categories in the dataset. For example, if the dataset contains apples, bananas, and oranges, `nc = 3`.
+
+- **Depth Multiple (`depth_multiple`)**: 
+   - A value of `0.33` is used. This parameter controls the depth (number of layers) of the network. Smaller values reduce the depth and make the model more efficient, while larger values increase the depth for more complex models.
+
+- **Width Multiple (`width_multiple`)**: 
+   - A value of `0.50` is used. This parameter controls the number of channels in each layer of the network. Smaller values reduce the number of channels, making the model more lightweight, while larger values increase the number of channels for higher capacity.
+
+- **Anchor Boxes**: 
+   - The model uses anchor boxes to help predict bounding boxes for objects. The anchor sizes for this model are:
+     - **Small**: [10, 13, 16, 30, 33, 23]
+     - **Medium**: [30, 61, 62, 45, 59, 119]
+     - **Large**: [116, 90, 156, 198, 373, 326]
+
+- **Training Settings**: 
+   - **Batch Size**: `16` images per batch.
+   - **Epochs**: `50` epochs for model training.
+   - **Image Size**: `416x416` pixels for input images.
+   - **Learning Rate**: Default settings used.
+
+- **Optimizer**:
+   - The model uses the **Adam** optimizer with default parameters. This optimizer adapts the learning rate during training to improve convergence.
+
+---
+
+## Conclusion
+
+The **YOLOv5 Custom Object Detection** project successfully trains a model for fruit detection, achieving high performance with a custom configuration that adapts to specific needs. The use of Roboflow's dataset and the flexible architecture of YOLOv5 allows for easy customization to detect other objects as well.
+
+The model can be fine-tuned further, depending on the application. You can adjust the number of epochs, batch size, image size, and network depth to optimize the model for your specific dataset and hardware.
+
+---
+
+## License
+
+This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for more information.
